@@ -3,10 +3,10 @@ from fastapi.responses import JSONResponse, HTMLResponse
 import uvicorn
 import os
 
-app = FastAPI(title="MasterDAO | Advanced Control Panel")
+app = FastAPI(title="DAPAnalyz | Web3 dApp Node")
 
 # ==========================================
-# 1. WEB UI ANIMASI FULL (BOOT-UP & HOLOGRAM)
+# 1. WEB UI: DAPAnalyz DASHBOARD + WEB3 CONNECT
 # ==========================================
 @app.get("/", response_class=HTMLResponse)
 def read_root():
@@ -16,218 +16,277 @@ def read_root():
     <head>
         <meta charset="UTF-8">
         <meta name="viewport" content="width=device-width, initial-scale=1.0">
-        <title>MasterDAO | System Terminal</title>
+        <title>DAPAnalyz | Web3 Terminal</title>
+        <script src="https://cdnjs.cloudflare.com/ajax/libs/ethers/5.7.2/ethers.umd.min.js"></script>
+        
         <style>
-            @import url('https://fonts.googleapis.com/css2?family=Orbitron:wght@500;700&family=Space+Mono&display=swap');
+            @import url('https://fonts.googleapis.com/css2?family=Rajdhani:wght@500;600;700&family=Fira+Code:wght@400;500&display=swap');
+
+            :root {
+                --bg-color: #050b14;
+                --panel-bg: rgba(10, 17, 30, 0.85);
+                --cyan: #00f0ff;
+                --purple: #8a2be2;
+                --green: #00ff88;
+                --text-main: #e2e8f0;
+                --text-muted: #64748b;
+            }
 
             body {
-                font-family: 'Space Mono', monospace;
-                background-color: #030406;
-                color: #b0bec5;
+                font-family: 'Rajdhani', sans-serif;
+                background-color: var(--bg-color);
+                color: var(--text-main);
                 margin: 0;
                 display: flex;
                 justify-content: center;
                 align-items: center;
-                height: 100vh;
-                overflow: hidden;
+                min-height: 100vh;
+                background-image: 
+                    linear-gradient(rgba(0, 240, 255, 0.05) 1px, transparent 1px),
+                    linear-gradient(90deg, rgba(0, 240, 255, 0.05) 1px, transparent 1px);
+                background-size: 30px 30px;
             }
 
-            /* --- ANIMASI BOOT-UP TERMINAL --- */
-            #boot-screen {
-                position: absolute;
-                top: 0; left: 0; width: 100%; height: 100%;
-                background-color: #030406;
-                z-index: 9999;
-                display: flex;
-                flex-direction: column;
-                justify-content: center;
-                padding-left: 10%;
-                color: #4ADE80;
-                font-size: 1.2rem;
-                transition: opacity 1s ease-out;
-            }
+            #particles-js { position: fixed; width: 100%; height: 100%; z-index: 0; top:0; left:0; }
 
-            .typewriter-text {
-                overflow: hidden;
-                white-space: nowrap;
-                border-right: .15em solid #4ADE80;
-                margin: 0;
-                width: 0;
-            }
-
-            @keyframes typing {
-                from { width: 0 }
-                to { width: 100% }
-            }
-            @keyframes blink-caret {
-                from, to { border-color: transparent }
-                50% { border-color: #4ADE80; }
-            }
-
-            /* --- UI UTAMA --- */
-            #main-ui {
-                opacity: 0;
-                transform: scale(0.9);
-                transition: all 1.5s cubic-bezier(0.16, 1, 0.3, 1);
-                display: flex;
-                justify-content: center;
-                align-items: center;
-                width: 100%; height: 100%;
-                position: relative;
-            }
-
-            #main-ui.visible {
-                opacity: 1;
-                transform: scale(1);
-            }
-
-            #particles-js { position: absolute; width: 100%; height: 100%; z-index: 0; }
-
-            /* Panel Mengambang */
-            .panel {
-                background: rgba(15, 23, 42, 0.6);
-                backdrop-filter: blur(12px);
-                padding: 50px;
-                border-radius: 24px;
-                box-shadow: 0 0 50px rgba(56, 189, 248, 0.1);
-                text-align: center;
-                border: 1px solid rgba(56, 189, 248, 0.4);
-                max-width: 450px;
+            .dashboard-panel {
+                background: var(--panel-bg);
+                backdrop-filter: blur(15px);
+                padding: 40px;
+                border-radius: 12px;
+                box-shadow: 0 0 40px rgba(0, 240, 255, 0.1);
+                border: 1px solid rgba(0, 240, 255, 0.2);
+                border-top: 3px solid var(--cyan);
+                max-width: 600px;
                 width: 100%;
                 z-index: 1;
                 position: relative;
-                overflow: hidden;
-                animation: float 6s ease-in-out infinite;
+                margin: 20px;
             }
 
-            @keyframes float {
-                0% { transform: translateY(0px); }
-                50% { transform: translateY(-15px); }
-                100% { transform: translateY(0px); }
+            .header-container {
+                display: flex;
+                align-items: center;
+                justify-content: space-between;
+                margin-bottom: 30px;
+                border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+                padding-bottom: 20px;
             }
 
-            /* Garis Scanner Hologram */
-            .scanline {
-                position: absolute;
-                top: 0;
-                left: 0;
-                width: 100%;
-                height: 5px;
-                background: linear-gradient(to bottom, rgba(56, 189, 248, 0), rgba(56, 189, 248, 0.8), rgba(56, 189, 248, 0));
-                box-shadow: 0 0 15px rgba(56, 189, 248, 0.8);
-                opacity: 0.6;
-                animation: scanning 3s linear infinite;
-                z-index: 10;
-                pointer-events: none;
+            .logo-section { display: flex; align-items: center; }
+            .logo-icon { font-size: 2.5rem; margin-right: 15px; text-shadow: 0 0 10px var(--cyan); }
+            
+            .title-box h1 {
+                margin: 0; font-size: 2rem;
+                background: linear-gradient(90deg, #fff, var(--cyan));
+                -webkit-background-clip: text; -webkit-text-fill-color: transparent;
+            }
+            .title-box p { margin: 0; color: var(--cyan); font-family: 'Fira Code', monospace; font-size: 0.8rem; }
+
+            /* Web3 Button */
+            .btn-connect {
+                background: transparent;
+                color: var(--cyan);
+                border: 1px solid var(--cyan);
+                padding: 10px 20px;
+                font-family: 'Fira Code', monospace;
+                font-size: 0.9rem;
+                cursor: pointer;
+                border-radius: 4px;
+                transition: all 0.3s ease;
+                box-shadow: 0 0 10px rgba(0, 240, 255, 0.2) inset;
+            }
+            .btn-connect:hover { background: var(--cyan); color: #000; box-shadow: 0 0 20px rgba(0, 240, 255, 0.6); }
+
+            /* Wallet Data Section */
+            #wallet-data { display: none; margin-bottom: 20px; }
+            
+            .data-grid {
+                display: grid;
+                grid-template-columns: 1fr 1fr;
+                gap: 15px;
+                margin-bottom: 20px;
             }
 
-            @keyframes scanning {
-                0% { top: -10%; }
-                100% { top: 110%; }
+            .data-box {
+                background: rgba(0, 0, 0, 0.5);
+                border: 1px solid rgba(0, 240, 255, 0.3);
+                padding: 15px;
+                border-radius: 8px;
             }
 
-            .logo-container { position: relative; display: inline-block; margin-bottom: 20px; }
-            .logo { font-size: 4.5rem; }
-            .logo-glow {
-                position: absolute; top: 0; left: 0; width: 100%; height: 100%;
-                background: radial-gradient(circle, rgba(56, 189, 248, 0.6) 0%, rgba(56, 189, 248, 0) 70%);
-                border-radius: 50%;
-                animation: pulseGlow 2s infinite alternate;
-                z-index: -1;
+            .data-label { font-family: 'Fira Code', monospace; font-size: 0.75rem; color: var(--text-muted); }
+            .data-value { font-size: 1.2rem; font-weight: bold; margin-top: 5px; color: #fff; font-family: 'Fira Code', monospace; }
+            .data-value.green { color: var(--green); }
+
+            /* Terminal Analitik (Simulasi Transaksi) */
+            .terminal {
+                background: #000;
+                padding: 15px;
+                border-radius: 6px;
+                font-family: 'Fira Code', monospace;
+                font-size: 0.8rem;
+                color: var(--text-muted);
+                border: 1px solid rgba(138, 43, 226, 0.4);
+                height: 150px;
+                overflow-y: auto;
             }
 
-            @keyframes pulseGlow {
-                0% { transform: scale(1); opacity: 0.5; }
-                100% { transform: scale(1.3); opacity: 0.9; }
-            }
+            .term-line { margin: 5px 0; border-bottom: 1px dashed rgba(255,255,255,0.05); padding-bottom: 5px; }
+            .term-time { color: var(--purple); margin-right: 10px; }
+            .term-action { color: var(--cyan); }
+            .term-alert { color: #ff3366; }
+            
+            /* Scrollbar styling untuk terminal */
+            .terminal::-webkit-scrollbar { width: 5px; }
+            .terminal::-webkit-scrollbar-track { background: #000; }
+            .terminal::-webkit-scrollbar-thumb { background: var(--cyan); }
 
-            h1 {
-                font-family: 'Orbitron', sans-serif;
-                color: #e0f2fe;
-                margin: 15px 0;
-                font-size: 2.2rem;
-                letter-spacing: 3px;
-                text-shadow: 0 0 15px #38bdf8;
-            }
-
-            p { color: #94a3b8; letter-spacing: 1px; }
-
-            .status-container { display: flex; justify-content: center; align-items: center; margin-top: 25px; }
-            .status-indicator {
-                width: 14px; height: 14px; background-color: #4ade80; border-radius: 50%; margin-right: 12px;
-                box-shadow: 0 0 15px #4ade80;
-                animation: blink 1s infinite alternate;
-            }
-
-            @keyframes blink {
-                0% { opacity: 0.4; box-shadow: 0 0 5px #4ade80; }
-                100% { opacity: 1; box-shadow: 0 0 20px #4ade80; }
-            }
-
-            .status-text { color: #4ade80; font-weight: bold; letter-spacing: 2px; }
-            .info-line { height: 1px; background: linear-gradient(to right, transparent, rgba(56, 189, 248, 0.5), transparent); margin: 30px 0; }
-            .footer { font-size: 0.75rem; color: #64748b; }
         </style>
     </head>
     <body>
 
-        <div id="boot-screen">
-            <p class="typewriter-text" style="animation: typing 1s steps(30, end) forwards;">> INITIATING MASTERDAO PROTOCOL...</p>
-            <p class="typewriter-text" style="animation: typing 1s steps(30, end) 1s forwards; width: 0;">> ESTABLISHING SECURE CONNECTION TO BASE NETWORK...</p>
-            <p class="typewriter-text" style="animation: typing 1s steps(30, end) 2s forwards, blink-caret .75s step-end infinite; width: 0;">> BYPASSING FIREWALL... SUCCESS!</p>
-        </div>
+        <div id="particles-js"></div>
 
-        <div id="main-ui">
-            <div id="particles-js"></div>
-            <div class="panel">
-                <div class="scanline"></div>
-                <div class="logo-container">
-                    <div class="logo">🛰️</div>
-                    <div class="logo-glow"></div>
+        <div class="dashboard-panel">
+            <div class="header-container">
+                <div class="logo-section">
+                    <div class="logo-icon">👁️‍🗨️</div>
+                    <div class="title-box">
+                        <h1>DAPAnalyz</h1>
+                        <p>ON-CHAIN ANALYTICS NODE</p>
+                    </div>
                 </div>
-                <h1>MasterDAO</h1>
-                <p>Advanced MCP Node</p>
-                <div class="info-line"></div>
-                <div class="status-container">
-                    <div class="status-indicator"></div>
-                    <div class="status-text">NODE ONLINE // SYNCED</div>
+                <button id="btn-connect" class="btn-connect" onclick="connectWallet()">CONNECT WALLET</button>
+            </div>
+
+            <div id="default-view" style="text-align: center; padding: 40px 0;">
+                <p style="color: var(--text-muted); font-family: 'Fira Code';">
+                    [!] SYSTEM STANDBY.<br>
+                    Please connect a Web3 wallet (MetaMask) to initiate heuristic network scan.
+                </p>
+            </div>
+
+            <div id="wallet-data">
+                <div class="data-grid">
+                    <div class="data-box">
+                        <div class="data-label">TARGET ADDRESS</div>
+                        <div class="data-value" id="ui-address">0x00...000</div>
+                    </div>
+                    <div class="data-box">
+                        <div class="data-label">LIVE BALANCE</div>
+                        <div class="data-value green" id="ui-balance">0.0000 ETH</div>
+                    </div>
+                    <div class="data-box">
+                        <div class="data-label">CONNECTED NETWORK</div>
+                        <div class="data-value" id="ui-network">Unknown</div>
+                    </div>
+                    <div class="data-box">
+                        <div class="data-label">SECURITY RATING</div>
+                        <div class="data-value" style="color: #00ff88;">A+ (SECURE)</div>
+                    </div>
                 </div>
-                <div class="info-line"></div>
-                <div class="footer">
-                    AWAITING INSTRUCTIONS FROM ERC-8004 SMART CONTRACT
+
+                <div class="data-label" style="margin-bottom: 10px;">> LIVE TRANSACTION HEURISTIC SCAN:</div>
+                <div class="terminal" id="terminal-log">
+                    <div class="term-line"><span class="term-action">Initializing blockchain packet sniffer...</span></div>
                 </div>
             </div>
         </div>
 
         <script src="https://cdn.jsdelivr.net/particles.js/2.0.0/particles.min.js"></script>
         <script>
-            // Logika transisi Boot-up ke Main UI
-            setTimeout(() => {
-                const bootScreen = document.getElementById('boot-screen');
-                const mainUi = document.getElementById('main-ui');
+            // Logika Web3.js / Ethers.js
+            async function connectWallet() {
+                const btn = document.getElementById('btn-connect');
                 
-                bootScreen.style.opacity = '0';
-                setTimeout(() => {
-                    bootScreen.style.display = 'none';
-                    mainUi.classList.add('visible');
-                }, 1000);
-            }, 3500);
+                // Cek apakah ada MetaMask atau dompet Web3
+                if (typeof window.ethereum !== 'undefined') {
+                    try {
+                        btn.innerText = "CONNECTING...";
+                        
+                        // Meminta akses ke dompet
+                        const provider = new ethers.providers.Web3Provider(window.ethereum);
+                        await provider.send("eth_requestAccounts", []);
+                        const signer = provider.getSigner();
+                        
+                        // Mengambil Data Asli dari Blockchain
+                        const address = await signer.getAddress();
+                        const balance = await provider.getBalance(address);
+                        const ethBalance = ethers.utils.formatEther(balance);
+                        const network = await provider.getNetwork();
 
-            // Efek Partikel
+                        // Memperbarui UI
+                        document.getElementById('ui-address').innerText = address.substring(0, 6) + '...' + address.substring(38);
+                        document.getElementById('ui-balance').innerText = parseFloat(ethBalance).toFixed(4) + ' ETH';
+                        document.getElementById('ui-network').innerText = network.name.toUpperCase() + ' (' + network.chainId + ')';
+
+                        // Menyembunyikan tampilan default, memunculkan panel data
+                        document.getElementById('default-view').style.display = 'none';
+                        document.getElementById('wallet-data').style.display = 'block';
+                        
+                        btn.innerText = "CONNECTED";
+                        btn.style.background = "var(--cyan)";
+                        btn.style.color = "#000";
+                        btn.disabled = true;
+
+                        // Memulai simulasi terminal transaksi
+                        startHeuristicScan(address);
+
+                    } catch (error) {
+                        console.error("Koneksi ditolak:", error);
+                        btn.innerText = "CONNECT WALLET";
+                        alert("Gagal menghubungkan dompet. Pastikan Anda menyetujui koneksi di MetaMask.");
+                    }
+                } else {
+                    alert("Sistem Web3 tidak terdeteksi! Silakan instal ekstensi browser MetaMask.");
+                }
+            }
+
+            // Simulasi Log Transaksi Canggih
+            function startHeuristicScan(address) {
+                const terminal = document.getElementById('terminal-log');
+                const dummyLogs = [
+                    `<span class="term-action">Extracting historical tx data for ${address.substring(0,8)}...</span>`,
+                    `Scanning recent ERC-20 transfers... <span style="color:#00ff88">CLEAN</span>`,
+                    `Checking interactions with known malicious contracts... <span style="color:#00ff88">0 FOUND</span>`,
+                    `<span class="term-alert">NOTICE:</span> Low liquidity pool interaction detected 12 days ago.`,
+                    `Analyzing Gas fee optimization patterns... <span class="term-action">EFFICIENCY: 87%</span>`,
+                    `Cross-referencing address with OFAC sanction list... <span style="color:#00ff88">PASSED</span>`,
+                    `Monitoring for incoming pending transactions in mempool...`
+                ];
+
+                let i = 0;
+                const scanInterval = setInterval(() => {
+                    if (i < dummyLogs.length) {
+                        const time = new Date().toISOString().substring(11, 19);
+                        const logLine = document.createElement('div');
+                        logLine.className = 'term-line';
+                        logLine.innerHTML = `<span class="term-time">[${time}]</span> ${dummyLogs[i]}`;
+                        terminal.appendChild(logLine);
+                        terminal.scrollTop = terminal.scrollHeight; // Auto-scroll ke bawah
+                        i++;
+                    } else {
+                        clearInterval(scanInterval);
+                    }
+                }, 1200); // Muncul setiap 1.2 detik
+            }
+
+            // Efek Latar Belakang
             particlesJS("particles-js", {
                 "particles": {
-                    "number": { "value": 60, "density": { "enable": true, "value_area": 800 } },
-                    "color": { "value": "#38bdf8" },
+                    "number": { "value": 50, "density": { "enable": true, "value_area": 800 } },
+                    "color": { "value": "#00f0ff" },
                     "shape": { "type": "circle" },
-                    "opacity": { "value": 0.5, "random": true },
-                    "size": { "value": 3, "random": true },
-                    "line_linked": { "enable": true, "distance": 150, "color": "#38bdf8", "opacity": 0.2, "width": 1 },
-                    "move": { "enable": true, "speed": 1.5, "direction": "top", "random": true, "out_mode": "out" }
+                    "opacity": { "value": 0.3, "random": false },
+                    "size": { "value": 2, "random": true },
+                    "line_linked": { "enable": true, "distance": 150, "color": "#00f0ff", "opacity": 0.2, "width": 1 },
+                    "move": { "enable": true, "speed": 1, "direction": "none", "random": true }
                 },
                 "interactivity": {
                     "detect_on": "canvas",
-                    "events": { "onhover": { "enable": true, "mode": "repulse" }, "onclick": { "enable": true, "mode": "push" } },
-                    "modes": { "repulse": { "distance": 100, "duration": 0.4 } }
+                    "events": { "onhover": { "enable": true, "mode": "grab" } },
+                    "modes": { "grab": { "distance": 200, "line_linked": { "opacity": 0.5 } } }
                 }
             });
         </script>
@@ -235,7 +294,6 @@ def read_root():
     </html>
     """
     return html_content
-
 
 # ==========================================
 # 2. ENDPOINT RAHASIA (JSON-RPC 2.0 UNTUK 8004SCAN)
@@ -245,17 +303,15 @@ def read_root():
 def mcp_health_check(agent_id: str):
     return JSONResponse(
         status_code=200,
-        content={"status": "Healthy", "message": "MCP Endpoint Active"}
+        content={"status": "Healthy", "message": "DAPAnalyz Endpoint Active"}
     )
 
 @app.post("/mcp/{agent_id}")
 async def mcp_receive_command(agent_id: str, request: Request):
     try:
         req_data = await request.json()
-        
         req_id = req_data.get("id", 1)
         method = req_data.get("method", "")
-        
         print(f"[*] Agent {agent_id} received request method: {method}")
 
         result_data = {}
@@ -263,134 +319,41 @@ async def mcp_receive_command(agent_id: str, request: Request):
         if method == "initialize":
             result_data = {
                 "protocolVersion": "2024-11-05",
-                "capabilities": {
-                    "tools": {},
-                    "prompts": {},
-                    "resources": {}
-                },
-                "serverInfo": {
-                    "name": "MasterDAO Node",
-                    "version": "1.0.0"
-                }
+                "capabilities": { "tools": {}, "prompts": {}, "resources": {} },
+                "serverInfo": { "name": "DAPAnalyz Node", "version": "2.0.0" }
             }
-            
         elif method == "tools/list":
             result_data = {
                 "tools": [
-                    {
-                        "name": "analyze_wallet",
-                        "description": "Analyze wallet addresses and transaction history on the Base network.",
-                        "inputSchema": {
-                            "type": "object",
-                            "properties": {
-                                "address": {"type": "string", "description": "Target 0x wallet address"}
-                            },
-                            "required": ["address"]
-                        }
-                    },
-                    {
-                        "name": "get_token_price",
-                        "description": "Fetch real-time price and liquidity data for ERC-20 tokens on decentralized exchanges.",
-                        "inputSchema": {
-                            "type": "object",
-                            "properties": {
-                                "contract_address": {"type": "string", "description": "Token smart contract address"}
-                            },
-                            "required": ["contract_address"]
-                        }
-                    },
-                    {
-                        "name": "check_contract_security",
-                        "description": "Scan smart contracts for common vulnerabilities such as reentrancy or overflow.",
-                        "inputSchema": {
-                            "type": "object",
-                            "properties": {
-                                "contract_address": {"type": "string", "description": "Smart contract address to audit"}
-                            },
-                            "required": ["contract_address"]
-                        }
-                    },
-                    {
-                        "name": "monitor_whale_activity",
-                        "description": "Track large transactions and whale movements for specific assets.",
-                        "inputSchema": {
-                            "type": "object",
-                            "properties": {
-                                "token_symbol": {"type": "string", "description": "Token symbol (e.g., ETH, USDC)"},
-                                "min_amount": {"type": "number", "description": "Minimum transaction value in USD"}
-                            },
-                            "required": ["token_symbol", "min_amount"]
-                        }
-                    },
-                    {
-                        "name": "calculate_yield_roi",
-                        "description": "Calculate projected Return on Investment (ROI) and Impermanent Loss for DeFi staking pools.",
-                        "inputSchema": {
-                            "type": "object",
-                            "properties": {
-                                "pool_id": {"type": "string", "description": "Identifier of the liquidity pool"},
-                                "deposit_amount": {"type": "number", "description": "Amount to deposit"}
-                            },
-                            "required": ["pool_id", "deposit_amount"]
-                        }
-                    }
+                    { "name": "analyze_wallet", "description": "Analyze wallet addresses on Base.", "inputSchema": { "type": "object", "properties": { "address": {"type": "string"} }, "required": ["address"] } },
+                    { "name": "get_token_price", "description": "Fetch real-time price.", "inputSchema": { "type": "object", "properties": { "contract_address": {"type": "string"} }, "required": ["contract_address"] } },
+                    { "name": "check_contract_security", "description": "Scan smart contracts.", "inputSchema": { "type": "object", "properties": { "contract_address": {"type": "string"} }, "required": ["contract_address"] } },
+                    { "name": "monitor_whale_activity", "description": "Track whale movements.", "inputSchema": { "type": "object", "properties": { "token_symbol": {"type": "string"}, "min_amount": {"type": "number"} }, "required": ["token_symbol", "min_amount"] } },
+                    { "name": "calculate_yield_roi", "description": "Calculate projected ROI.", "inputSchema": { "type": "object", "properties": { "pool_id": {"type": "string"}, "deposit_amount": {"type": "number"} }, "required": ["pool_id", "deposit_amount"] } }
                 ]
             }
-            
         elif method == "prompts/list":
             result_data = {
                 "prompts": [
-                    {
-                        "name": "generate_audit_report",
-                        "description": "Generate comprehensive Web3 smart contract audit and security reports."
-                    },
-                    {
-                        "name": "explain_defi_strategy",
-                        "description": "Provide a step-by-step breakdown of a specific yield farming strategy on the Base network."
-                    },
-                    {
-                        "name": "summarize_dao_proposal",
-                        "description": "Summarize the key points, risks, and potential impact of an active DAO governance proposal."
-                    }
+                    { "name": "generate_audit_report", "description": "Generate security reports." },
+                    { "name": "explain_defi_strategy", "description": "Breakdown yield farming strategy." },
+                    { "name": "summarize_dao_proposal", "description": "Summarize DAO governance proposal." }
                 ]
             }
-            
-        # 4. KITA TAMBAHKAN RESOURCES DI SINI!
         elif method == "resources/list":
             result_data = {
                 "resources": [
-                    {
-                        "uri": "file:///data/base_network_stats.json",
-                        "name": "Base Network Statistics",
-                        "description": "Real-time statistics of the Base blockchain including TPS, gas fees, and active addresses.",
-                        "mimeType": "application/json"
-                    },
-                    {
-                        "uri": "file:///docs/masterdao_security_guidelines.md",
-                        "name": "MasterDAO Security Guidelines",
-                        "description": "Standard operating procedures and security checklists for DeFi smart contract audits.",
-                        "mimeType": "text/markdown"
-                    }
+                    { "uri": "file:///data/base_stats.json", "name": "Base Statistics", "description": "Real-time statistics.", "mimeType": "application/json" },
+                    { "uri": "file:///docs/security_guide.md", "name": "Security Guidelines", "description": "Security checklists.", "mimeType": "text/markdown" }
                 ]
             }
-            
         else:
             result_data = {"status": "success", "message": f"Command received for {agent_id}"}
 
-        response_payload = {
-            "jsonrpc": "2.0",
-            "id": req_id,
-            "result": result_data
-        }
-        
-        return JSONResponse(status_code=200, content=response_payload)
+        return JSONResponse(status_code=200, content={"jsonrpc": "2.0", "id": req_id, "result": result_data})
 
     except Exception as e:
-        return JSONResponse(status_code=200, content={
-            "jsonrpc": "2.0",
-            "id": None,
-            "error": {"code": -32700, "message": "Parse error"}
-        })
+        return JSONResponse(status_code=200, content={"jsonrpc": "2.0", "id": None, "error": {"code": -32700, "message": "Parse error"}})
 
 if __name__ == "__main__":
     import os
