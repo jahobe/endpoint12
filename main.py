@@ -6,7 +6,7 @@ import os
 app = FastAPI(title="DAPAnalyz | Web3 dApp Node")
 
 # ==========================================
-# 1. WEB UI: DAPAnalyz DASHBOARD + ANIMASI INTRO
+# 1. WEB UI: DAPAnalyz DASHBOARD + LOGOUT/SWITCH WALLET
 # ==========================================
 @app.get("/", response_class=HTMLResponse)
 def read_root():
@@ -28,6 +28,7 @@ def read_root():
                 --cyan: #00f0ff;
                 --purple: #8a2be2;
                 --green: #00ff88;
+                --red: #ff3366;
                 --text-main: #e2e8f0;
                 --text-muted: #64748b;
             }
@@ -63,50 +64,19 @@ def read_root():
                 transition: opacity 0.8s ease-out, transform 0.8s ease-in;
             }
 
-            /* Cincin Berputar */
-            .cyber-rings {
-                position: relative;
-                width: 160px; height: 160px;
-                display: flex; align-items: center; justify-content: center;
-            }
-            .ring-outer {
-                position: absolute; width: 100%; height: 100%;
-                border: 2px dashed var(--cyan); border-radius: 50%;
-                animation: spinRight 6s linear infinite;
-                box-shadow: 0 0 20px rgba(0, 240, 255, 0.2);
-            }
-            .ring-inner {
-                position: absolute; width: 70%; height: 70%;
-                border: 2px solid var(--purple); border-radius: 50%;
-                border-top-color: transparent; border-bottom-color: transparent;
-                animation: spinLeft 3s linear infinite;
-            }
-            .intro-logo {
-                font-size: 3.5rem; position: absolute;
-                text-shadow: 0 0 15px var(--cyan);
-                animation: pulseLogo 2s infinite alternate;
-            }
+            .cyber-rings { position: relative; width: 160px; height: 160px; display: flex; align-items: center; justify-content: center; }
+            .ring-outer { position: absolute; width: 100%; height: 100%; border: 2px dashed var(--cyan); border-radius: 50%; animation: spinRight 6s linear infinite; box-shadow: 0 0 20px rgba(0, 240, 255, 0.2); }
+            .ring-inner { position: absolute; width: 70%; height: 70%; border: 2px solid var(--purple); border-radius: 50%; border-top-color: transparent; border-bottom-color: transparent; animation: spinLeft 3s linear infinite; }
+            .intro-logo { font-size: 3.5rem; position: absolute; text-shadow: 0 0 15px var(--cyan); animation: pulseLogo 2s infinite alternate; }
 
             @keyframes spinRight { 100% { transform: rotate(360deg); } }
             @keyframes spinLeft { 100% { transform: rotate(-360deg); } }
             @keyframes pulseLogo { 0% { transform: scale(0.9); opacity: 0.7; } 100% { transform: scale(1.1); opacity: 1; } }
 
-            /* Progress Bar */
-            .loading-text {
-                margin-top: 40px; font-family: 'Fira Code', monospace;
-                color: var(--cyan); font-size: 0.9rem; letter-spacing: 2px;
-            }
-            .progress-container {
-                width: 300px; height: 4px; background: rgba(255,255,255,0.1);
-                margin-top: 15px; border-radius: 2px; overflow: hidden;
-            }
-            .progress-bar {
-                height: 100%; width: 0%; background: var(--cyan);
-                box-shadow: 0 0 15px var(--cyan); transition: width 0.1s;
-            }
-            .progress-percent {
-                margin-top: 10px; font-family: 'Fira Code', monospace; font-size: 1rem; color: #fff;
-            }
+            .loading-text { margin-top: 40px; font-family: 'Fira Code', monospace; color: var(--cyan); font-size: 0.9rem; letter-spacing: 2px; }
+            .progress-container { width: 300px; height: 4px; background: rgba(255,255,255,0.1); margin-top: 15px; border-radius: 2px; overflow: hidden; }
+            .progress-bar { height: 100%; width: 0%; background: var(--cyan); box-shadow: 0 0 15px var(--cyan); transition: width 0.1s; }
+            .progress-percent { margin-top: 10px; font-family: 'Fira Code', monospace; font-size: 1rem; color: #fff; }
 
             /* --- DASHBOARD UTAMA --- */
             #main-ui {
@@ -114,7 +84,7 @@ def read_root():
                 transition: all 1s cubic-bezier(0.2, 0.8, 0.2, 1);
                 display: flex; justify-content: center; align-items: center;
                 width: 100%; height: 100%; position: relative;
-                visibility: hidden; /* Sembunyikan saat intro */
+                visibility: hidden;
             }
             #main-ui.visible { opacity: 1; transform: scale(1); visibility: visible; }
 
@@ -136,13 +106,21 @@ def read_root():
             .title-box h1 { margin: 0; font-size: 2rem; background: linear-gradient(90deg, #fff, var(--cyan)); -webkit-background-clip: text; -webkit-text-fill-color: transparent; }
             .title-box p { margin: 0; color: var(--cyan); font-family: 'Fira Code', monospace; font-size: 0.8rem; }
 
-            /* Web3 Button */
-            .btn-connect {
+            /* Web3 Button (Connect & Disconnect) */
+            .btn-action {
                 background: transparent; color: var(--cyan); border: 1px solid var(--cyan);
                 padding: 10px 20px; font-family: 'Fira Code', monospace; font-size: 0.9rem;
                 cursor: pointer; border-radius: 4px; transition: all 0.3s ease; box-shadow: 0 0 10px rgba(0, 240, 255, 0.2) inset;
             }
-            .btn-connect:hover { background: var(--cyan); color: #000; box-shadow: 0 0 20px rgba(0, 240, 255, 0.6); }
+            .btn-action:hover { background: var(--cyan); color: #000; box-shadow: 0 0 20px rgba(0, 240, 255, 0.6); }
+            
+            /* Status Disconnect */
+            .btn-action.connected {
+                border-color: var(--red); color: var(--red); box-shadow: 0 0 10px rgba(255, 51, 102, 0.2) inset;
+            }
+            .btn-action.connected:hover {
+                background: var(--red); color: #fff; box-shadow: 0 0 20px rgba(255, 51, 102, 0.6);
+            }
 
             /* Wallet Data Section */
             #wallet-data { display: none; margin-bottom: 20px; }
@@ -160,7 +138,7 @@ def read_root():
             .term-line { margin: 5px 0; border-bottom: 1px dashed rgba(255,255,255,0.05); padding-bottom: 5px; }
             .term-time { color: var(--purple); margin-right: 10px; }
             .term-action { color: var(--cyan); }
-            .term-alert { color: #ff3366; }
+            .term-alert { color: var(--red); }
             .terminal::-webkit-scrollbar { width: 5px; }
             .terminal::-webkit-scrollbar-track { background: #000; }
             .terminal::-webkit-scrollbar-thumb { background: var(--cyan); }
@@ -176,9 +154,7 @@ def read_root():
                 <div class="intro-logo">👁️‍🗨️</div>
             </div>
             <div class="loading-text" id="loading-text">CONNECTING TO BASE NETWORK...</div>
-            <div class="progress-container">
-                <div class="progress-bar" id="progress-bar"></div>
-            </div>
+            <div class="progress-container"><div class="progress-bar" id="progress-bar"></div></div>
             <div class="progress-percent" id="progress-percent">0%</div>
         </div>
 
@@ -194,7 +170,7 @@ def read_root():
                             <p>ON-CHAIN ANALYTICS NODE</p>
                         </div>
                     </div>
-                    <button id="btn-connect" class="btn-connect" onclick="connectWallet()">CONNECT WALLET</button>
+                    <button id="btn-action" class="btn-action" onclick="toggleWallet()">CONNECT WALLET</button>
                 </div>
 
                 <div id="default-view" style="text-align: center; padding: 40px 0;">
@@ -213,15 +189,18 @@ def read_root():
                     </div>
                     <div class="data-label" style="margin-bottom: 10px;">> LIVE TRANSACTION HEURISTIC SCAN:</div>
                     <div class="terminal" id="terminal-log">
-                        <div class="term-line"><span class="term-action">Initializing blockchain packet sniffer...</span></div>
-                    </div>
+                        </div>
                 </div>
             </div>
         </div>
 
         <script src="https://cdn.jsdelivr.net/particles.js/2.0.0/particles.min.js"></script>
         <script>
-            // Logika Animasi Intro Loading
+            // Variabel Global Web3
+            let currentAccount = null;
+            let scanIntervalId = null;
+
+            // --- ANIMASI INTRO ---
             document.addEventListener("DOMContentLoaded", () => {
                 let progress = 0;
                 const bar = document.getElementById('progress-bar');
@@ -230,90 +209,128 @@ def read_root():
                 const intro = document.getElementById('intro-loader');
                 const mainUi = document.getElementById('main-ui');
 
-                const loadingStages = [
-                    "CONNECTING TO BASE NETWORK...",
-                    "SYNCING LEDGER PROTOCOLS...",
-                    "LOADING HEURISTIC AI MODULES...",
-                    "BYPASSING SECURITY FIREWALL..."
-                ];
-
                 const loaderInterval = setInterval(() => {
-                    progress += Math.floor(Math.random() * 4) + 1; // Naik secara acak agar natural
+                    progress += Math.floor(Math.random() * 4) + 1;
                     if (progress >= 100) progress = 100;
-                    
-                    bar.style.width = progress + '%';
-                    pct.innerText = progress + '%';
-
-                    if (progress === 25) text.innerText = loadingStages[1];
-                    if (progress === 55) text.innerText = loadingStages[2];
-                    if (progress === 80) text.innerText = loadingStages[3];
-
+                    bar.style.width = progress + '%'; pct.innerText = progress + '%';
                     if (progress === 100) {
                         clearInterval(loaderInterval);
-                        text.innerText = "ACCESS GRANTED";
-                        text.style.color = "#00ff88"; // Berubah hijau
-                        
+                        text.innerText = "ACCESS GRANTED"; text.style.color = "#00ff88";
                         setTimeout(() => {
-                            intro.style.transform = 'scale(1.5)'; // Efek zoom mendekat
-                            intro.style.opacity = '0'; // Pudar
-                            
+                            intro.style.transform = 'scale(1.5)'; intro.style.opacity = '0';
                             setTimeout(() => {
                                 intro.style.display = 'none';
-                                mainUi.classList.add('visible'); // Tampilkan Dashboard
+                                mainUi.classList.add('visible');
                             }, 800);
                         }, 600);
                     }
-                }, 60); // Kecepatan interval loading
+                }, 40);
+
+                // Setup listener untuk pergantian akun MetaMask (Switch Account)
+                if (window.ethereum) {
+                    window.ethereum.on('accountsChanged', handleAccountsChanged);
+                    window.ethereum.on('chainChanged', () => window.location.reload());
+                }
             });
 
-            // Logika Web3.js / Ethers.js
+            // --- LOGIKA WEB3 (CONNECT/DISCONNECT/SWITCH) ---
+            async function toggleWallet() {
+                if (currentAccount) {
+                    // Jika sudah login, maka proses Logout
+                    logoutWallet();
+                } else {
+                    // Jika belum login, maka proses Connect
+                    connectWallet();
+                }
+            }
+
             async function connectWallet() {
-                const btn = document.getElementById('btn-connect');
+                const btn = document.getElementById('btn-action');
                 if (typeof window.ethereum !== 'undefined') {
                     try {
                         btn.innerText = "CONNECTING...";
                         const provider = new ethers.providers.Web3Provider(window.ethereum);
-                        await provider.send("eth_requestAccounts", []);
-                        const signer = provider.getSigner();
-                        
-                        const address = await signer.getAddress();
-                        const balance = await provider.getBalance(address);
-                        const ethBalance = ethers.utils.formatEther(balance);
-                        const network = await provider.getNetwork();
-
-                        document.getElementById('ui-address').innerText = address.substring(0, 6) + '...' + address.substring(38);
-                        document.getElementById('ui-balance').innerText = parseFloat(ethBalance).toFixed(4) + ' ETH';
-                        document.getElementById('ui-network').innerText = network.name.toUpperCase() + ' (' + network.chainId + ')';
-
-                        document.getElementById('default-view').style.display = 'none';
-                        document.getElementById('wallet-data').style.display = 'block';
-                        
-                        btn.innerText = "CONNECTED"; btn.style.background = "var(--cyan)"; btn.style.color = "#000"; btn.disabled = true;
-
-                        startHeuristicScan(address);
+                        const accounts = await provider.send("eth_requestAccounts", []);
+                        handleAccountsChanged(accounts); // Proses akun yang didapat
                     } catch (error) {
                         btn.innerText = "CONNECT WALLET";
-                        alert("Gagal menghubungkan dompet. Pastikan Anda menyetujui koneksi di MetaMask.");
+                        alert("Gagal menghubungkan. Pastikan Anda menyetujui koneksi di MetaMask.");
                     }
                 } else {
-                    alert("Sistem Web3 tidak terdeteksi! Silakan instal ekstensi browser MetaMask.");
+                    alert("Sistem Web3 tidak terdeteksi! Silakan instal MetaMask.");
                 }
             }
 
-            // Simulasi Log Transaksi Terminal
+            function logoutWallet() {
+                currentAccount = null;
+                const btn = document.getElementById('btn-action');
+                
+                // Reset UI ke tampilan awal
+                document.getElementById('wallet-data').style.display = 'none';
+                document.getElementById('default-view').style.display = 'block';
+                
+                // Reset Tombol
+                btn.innerText = "CONNECT WALLET";
+                btn.classList.remove('connected');
+
+                // Hentikan animasi terminal
+                if(scanIntervalId) clearInterval(scanIntervalId);
+                document.getElementById('terminal-log').innerHTML = '';
+            }
+
+            async function handleAccountsChanged(accounts) {
+                if (accounts.length === 0) {
+                    // Jika user memutuskan koneksi dari dalam MetaMask
+                    logoutWallet();
+                } else if (accounts[0] !== currentAccount) {
+                    // Jika user login atau ganti akun dompet
+                    currentAccount = accounts[0];
+                    updateDashboardData(currentAccount);
+                }
+            }
+
+            async function updateDashboardData(address) {
+                const btn = document.getElementById('btn-action');
+                const provider = new ethers.providers.Web3Provider(window.ethereum);
+                
+                // Ambil Saldo & Network
+                const balance = await provider.getBalance(address);
+                const ethBalance = ethers.utils.formatEther(balance);
+                const network = await provider.getNetwork();
+
+                // Update teks di UI
+                document.getElementById('ui-address').innerText = address.substring(0, 6) + '...' + address.substring(38);
+                document.getElementById('ui-balance').innerText = parseFloat(ethBalance).toFixed(4) + ' ETH';
+                document.getElementById('ui-network').innerText = network.name.toUpperCase() + ' (' + network.chainId + ')';
+
+                // Tampilkan Dashboard, Sembunyikan pesan standby
+                document.getElementById('default-view').style.display = 'none';
+                document.getElementById('wallet-data').style.display = 'block';
+                
+                // Ubah tombol menjadi tombol LOGOUT merah
+                btn.innerText = "DISCONNECT [ " + address.substring(0,4) + ".. ]";
+                btn.classList.add('connected');
+
+                // Restart animasi terminal untuk dompet baru
+                startHeuristicScan(address);
+            }
+
+            // --- SIMULASI TERMINAL ---
             function startHeuristicScan(address) {
                 const terminal = document.getElementById('terminal-log');
+                terminal.innerHTML = '<div class="term-line"><span class="term-action">Initializing blockchain packet sniffer for new wallet...</span></div>';
+                if(scanIntervalId) clearInterval(scanIntervalId);
+
                 const dummyLogs = [
                     `<span class="term-action">Extracting historical tx data for ${address.substring(0,8)}...</span>`,
                     `Scanning recent ERC-20 transfers... <span style="color:#00ff88">CLEAN</span>`,
                     `Checking interactions with known malicious contracts... <span style="color:#00ff88">0 FOUND</span>`,
-                    `<span class="term-alert">NOTICE:</span> Low liquidity pool interaction detected 12 days ago.`,
-                    `Analyzing Gas fee optimization patterns... <span class="term-action">EFFICIENCY: 87%</span>`,
+                    `Analyzing Gas fee optimization patterns... <span class="term-action">EFFICIENCY: 92%</span>`,
                     `Cross-referencing address with OFAC sanction list... <span style="color:#00ff88">PASSED</span>`,
                     `Monitoring for incoming pending transactions in mempool...`
                 ];
                 let i = 0;
-                const scanInterval = setInterval(() => {
+                scanIntervalId = setInterval(() => {
                     if (i < dummyLogs.length) {
                         const time = new Date().toISOString().substring(11, 19);
                         const logLine = document.createElement('div');
@@ -323,26 +340,15 @@ def read_root():
                         terminal.scrollTop = terminal.scrollHeight;
                         i++;
                     } else {
-                        clearInterval(scanInterval);
+                        clearInterval(scanIntervalId);
                     }
-                }, 1200);
+                }, 1000);
             }
 
-            // Latar Belakang Partikel
+            // --- PARTIKEL BACKGROUND ---
             particlesJS("particles-js", {
-                "particles": {
-                    "number": { "value": 50 },
-                    "color": { "value": "#00f0ff" },
-                    "shape": { "type": "circle" },
-                    "opacity": { "value": 0.3 },
-                    "size": { "value": 2, "random": true },
-                    "line_linked": { "enable": true, "distance": 150, "color": "#00f0ff", "opacity": 0.2, "width": 1 },
-                    "move": { "enable": true, "speed": 1 }
-                },
-                "interactivity": {
-                    "events": { "onhover": { "enable": true, "mode": "grab" } },
-                    "modes": { "grab": { "distance": 200, "line_linked": { "opacity": 0.5 } } }
-                }
+                "particles": { "number": { "value": 50 }, "color": { "value": "#00f0ff" }, "shape": { "type": "circle" }, "opacity": { "value": 0.3 }, "size": { "value": 2, "random": true }, "line_linked": { "enable": true, "distance": 150, "color": "#00f0ff", "opacity": 0.2, "width": 1 }, "move": { "enable": true, "speed": 1 } },
+                "interactivity": { "events": { "onhover": { "enable": true, "mode": "grab" } }, "modes": { "grab": { "distance": 200, "line_linked": { "opacity": 0.5 } } } }
             });
         </script>
     </body>
@@ -356,10 +362,7 @@ def read_root():
 
 @app.get("/mcp/{agent_id}")
 def mcp_health_check(agent_id: str):
-    return JSONResponse(
-        status_code=200,
-        content={"status": "Healthy", "message": "DAPAnalyz Endpoint Active"}
-    )
+    return JSONResponse(status_code=200, content={"status": "Healthy", "message": "DAPAnalyz Endpoint Active"})
 
 @app.post("/mcp/{agent_id}")
 async def mcp_receive_command(agent_id: str, request: Request):
