@@ -6,7 +6,7 @@ import os
 app = FastAPI(title="DAPAnalyz | Web3 dApp Node")
 
 # ==========================================
-# 1. WEB UI: DAPAnalyz DASHBOARD + LOGOUT/SWITCH WALLET
+# 1. WEB UI: DAPAnalyz DASHBOARD + FORCE METAMASK POPUP
 # ==========================================
 @app.get("/", response_class=HTMLResponse)
 def read_root():
@@ -51,16 +51,10 @@ def read_root():
 
             #particles-js { position: fixed; width: 100%; height: 100%; z-index: 0; top:0; left:0; }
 
-            /* --- ANIMASI INTRO CANGGIH --- */
+            /* --- ANIMASI INTRO --- */
             #intro-loader {
-                position: fixed;
-                top: 0; left: 0; width: 100%; height: 100%;
-                background-color: var(--bg-color);
-                z-index: 9999;
-                display: flex;
-                flex-direction: column;
-                align-items: center;
-                justify-content: center;
+                position: fixed; top: 0; left: 0; width: 100%; height: 100%; background-color: var(--bg-color);
+                z-index: 9999; display: flex; flex-direction: column; align-items: center; justify-content: center;
                 transition: opacity 0.8s ease-out, transform 0.8s ease-in;
             }
 
@@ -80,49 +74,33 @@ def read_root():
 
             /* --- DASHBOARD UTAMA --- */
             #main-ui {
-                opacity: 0; transform: scale(0.9);
-                transition: all 1s cubic-bezier(0.2, 0.8, 0.2, 1);
-                display: flex; justify-content: center; align-items: center;
-                width: 100%; height: 100%; position: relative;
-                visibility: hidden;
+                opacity: 0; transform: scale(0.9); transition: all 1s cubic-bezier(0.2, 0.8, 0.2, 1);
+                display: flex; justify-content: center; align-items: center; width: 100%; height: 100%; position: relative; visibility: hidden;
             }
             #main-ui.visible { opacity: 1; transform: scale(1); visibility: visible; }
 
             .dashboard-panel {
-                background: var(--panel-bg); backdrop-filter: blur(15px);
-                padding: 40px; border-radius: 12px;
-                box-shadow: 0 0 40px rgba(0, 240, 255, 0.1);
-                border: 1px solid rgba(0, 240, 255, 0.2); border-top: 3px solid var(--cyan);
+                background: var(--panel-bg); backdrop-filter: blur(15px); padding: 40px; border-radius: 12px;
+                box-shadow: 0 0 40px rgba(0, 240, 255, 0.1); border: 1px solid rgba(0, 240, 255, 0.2); border-top: 3px solid var(--cyan);
                 max-width: 600px; width: 100%; z-index: 1; margin: 20px;
             }
 
-            .header-container {
-                display: flex; align-items: center; justify-content: space-between;
-                margin-bottom: 30px; border-bottom: 1px solid rgba(255, 255, 255, 0.1); padding-bottom: 20px;
-            }
-
+            .header-container { display: flex; align-items: center; justify-content: space-between; margin-bottom: 30px; border-bottom: 1px solid rgba(255, 255, 255, 0.1); padding-bottom: 20px; }
             .logo-section { display: flex; align-items: center; }
             .logo-icon { font-size: 2.5rem; margin-right: 15px; text-shadow: 0 0 10px var(--cyan); }
             .title-box h1 { margin: 0; font-size: 2rem; background: linear-gradient(90deg, #fff, var(--cyan)); -webkit-background-clip: text; -webkit-text-fill-color: transparent; }
             .title-box p { margin: 0; color: var(--cyan); font-family: 'Fira Code', monospace; font-size: 0.8rem; }
 
-            /* Web3 Button (Connect & Disconnect) */
+            /* Web3 Button */
             .btn-action {
-                background: transparent; color: var(--cyan); border: 1px solid var(--cyan);
-                padding: 10px 20px; font-family: 'Fira Code', monospace; font-size: 0.9rem;
+                background: transparent; color: var(--cyan); border: 1px solid var(--cyan); padding: 10px 20px; font-family: 'Fira Code', monospace; font-size: 0.9rem;
                 cursor: pointer; border-radius: 4px; transition: all 0.3s ease; box-shadow: 0 0 10px rgba(0, 240, 255, 0.2) inset;
             }
             .btn-action:hover { background: var(--cyan); color: #000; box-shadow: 0 0 20px rgba(0, 240, 255, 0.6); }
-            
-            /* Status Disconnect */
-            .btn-action.connected {
-                border-color: var(--red); color: var(--red); box-shadow: 0 0 10px rgba(255, 51, 102, 0.2) inset;
-            }
-            .btn-action.connected:hover {
-                background: var(--red); color: #fff; box-shadow: 0 0 20px rgba(255, 51, 102, 0.6);
-            }
+            .btn-action.connected { border-color: var(--red); color: var(--red); box-shadow: 0 0 10px rgba(255, 51, 102, 0.2) inset; }
+            .btn-action.connected:hover { background: var(--red); color: #fff; box-shadow: 0 0 20px rgba(255, 51, 102, 0.6); }
 
-            /* Wallet Data Section */
+            /* Wallet Data */
             #wallet-data { display: none; margin-bottom: 20px; }
             .data-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 15px; margin-bottom: 20px; }
             .data-box { background: rgba(0, 0, 0, 0.5); border: 1px solid rgba(0, 240, 255, 0.3); padding: 15px; border-radius: 8px; }
@@ -131,14 +109,10 @@ def read_root():
             .data-value.green { color: var(--green); }
 
             /* Terminal Analitik */
-            .terminal {
-                background: #000; padding: 15px; border-radius: 6px; font-family: 'Fira Code', monospace;
-                font-size: 0.8rem; color: var(--text-muted); border: 1px solid rgba(138, 43, 226, 0.4); height: 150px; overflow-y: auto;
-            }
+            .terminal { background: #000; padding: 15px; border-radius: 6px; font-family: 'Fira Code', monospace; font-size: 0.8rem; color: var(--text-muted); border: 1px solid rgba(138, 43, 226, 0.4); height: 150px; overflow-y: auto; }
             .term-line { margin: 5px 0; border-bottom: 1px dashed rgba(255,255,255,0.05); padding-bottom: 5px; }
             .term-time { color: var(--purple); margin-right: 10px; }
             .term-action { color: var(--cyan); }
-            .term-alert { color: var(--red); }
             .terminal::-webkit-scrollbar { width: 5px; }
             .terminal::-webkit-scrollbar-track { background: #000; }
             .terminal::-webkit-scrollbar-thumb { background: var(--cyan); }
@@ -148,11 +122,7 @@ def read_root():
     <body>
 
         <div id="intro-loader">
-            <div class="cyber-rings">
-                <div class="ring-outer"></div>
-                <div class="ring-inner"></div>
-                <div class="intro-logo">👁️‍🗨️</div>
-            </div>
+            <div class="cyber-rings"><div class="ring-outer"></div><div class="ring-inner"></div><div class="intro-logo">👁️‍🗨️</div></div>
             <div class="loading-text" id="loading-text">CONNECTING TO BASE NETWORK...</div>
             <div class="progress-container"><div class="progress-bar" id="progress-bar"></div></div>
             <div class="progress-percent" id="progress-percent">0%</div>
@@ -165,19 +135,13 @@ def read_root():
                 <div class="header-container">
                     <div class="logo-section">
                         <div class="logo-icon">👁️‍🗨️</div>
-                        <div class="title-box">
-                            <h1>DAPAnalyz</h1>
-                            <p>ON-CHAIN ANALYTICS NODE</p>
-                        </div>
+                        <div class="title-box"><h1>DAPAnalyz</h1><p>ON-CHAIN ANALYTICS NODE</p></div>
                     </div>
                     <button id="btn-action" class="btn-action" onclick="toggleWallet()">CONNECT WALLET</button>
                 </div>
 
                 <div id="default-view" style="text-align: center; padding: 40px 0;">
-                    <p style="color: var(--text-muted); font-family: 'Fira Code';">
-                        [!] SYSTEM STANDBY.<br>
-                        Please connect a Web3 wallet to initiate heuristic network scan.
-                    </p>
+                    <p style="color: var(--text-muted); font-family: 'Fira Code';">[!] SYSTEM STANDBY.<br>Please connect a Web3 wallet to initiate heuristic network scan.</p>
                 </div>
 
                 <div id="wallet-data">
@@ -188,19 +152,16 @@ def read_root():
                         <div class="data-box"><div class="data-label">SECURITY RATING</div><div class="data-value" style="color: #00ff88;">A+ (SECURE)</div></div>
                     </div>
                     <div class="data-label" style="margin-bottom: 10px;">> LIVE TRANSACTION HEURISTIC SCAN:</div>
-                    <div class="terminal" id="terminal-log">
-                        </div>
+                    <div class="terminal" id="terminal-log"></div>
                 </div>
             </div>
         </div>
 
         <script src="https://cdn.jsdelivr.net/particles.js/2.0.0/particles.min.js"></script>
         <script>
-            // Variabel Global Web3
             let currentAccount = null;
             let scanIntervalId = null;
 
-            // --- ANIMASI INTRO ---
             document.addEventListener("DOMContentLoaded", () => {
                 let progress = 0;
                 const bar = document.getElementById('progress-bar');
@@ -218,28 +179,21 @@ def read_root():
                         text.innerText = "ACCESS GRANTED"; text.style.color = "#00ff88";
                         setTimeout(() => {
                             intro.style.transform = 'scale(1.5)'; intro.style.opacity = '0';
-                            setTimeout(() => {
-                                intro.style.display = 'none';
-                                mainUi.classList.add('visible');
-                            }, 800);
+                            setTimeout(() => { intro.style.display = 'none'; mainUi.classList.add('visible'); }, 800);
                         }, 600);
                     }
                 }, 40);
 
-                // Setup listener untuk pergantian akun MetaMask (Switch Account)
                 if (window.ethereum) {
                     window.ethereum.on('accountsChanged', handleAccountsChanged);
                     window.ethereum.on('chainChanged', () => window.location.reload());
                 }
             });
 
-            // --- LOGIKA WEB3 (CONNECT/DISCONNECT/SWITCH) ---
             async function toggleWallet() {
                 if (currentAccount) {
-                    // Jika sudah login, maka proses Logout
                     logoutWallet();
                 } else {
-                    // Jika belum login, maka proses Connect
                     connectWallet();
                 }
             }
@@ -248,16 +202,27 @@ def read_root():
                 const btn = document.getElementById('btn-action');
                 if (typeof window.ethereum !== 'undefined') {
                     try {
-                        btn.innerText = "CONNECTING...";
+                        btn.innerText = "AUTHORIZING...";
+                        
+                        // --- INI RAHASIANYA: Memaksa MetaMask memunculkan pop-up ---
+                        await window.ethereum.request({
+                            method: "wallet_requestPermissions",
+                            params: [{ eth_accounts: {} }]
+                        });
+                        
+                        // Setelah diizinkan, baru kita tarik datanya
                         const provider = new ethers.providers.Web3Provider(window.ethereum);
                         const accounts = await provider.send("eth_requestAccounts", []);
-                        handleAccountsChanged(accounts); // Proses akun yang didapat
+                        handleAccountsChanged(accounts);
                     } catch (error) {
                         btn.innerText = "CONNECT WALLET";
-                        alert("Gagal menghubungkan. Pastikan Anda menyetujui koneksi di MetaMask.");
+                        // Pengecekan agar jika user meng-cancel pop-up, tidak muncul alert error yang mengganggu
+                        if (error.code !== 4001) {
+                            alert("Koneksi gagal atau ditolak oleh pengguna.");
+                        }
                     }
                 } else {
-                    alert("Sistem Web3 tidak terdeteksi! Silakan instal MetaMask.");
+                    alert("Sistem Web3 tidak terdeteksi! Silakan instal ekstensi browser MetaMask.");
                 }
             }
 
@@ -265,25 +230,20 @@ def read_root():
                 currentAccount = null;
                 const btn = document.getElementById('btn-action');
                 
-                // Reset UI ke tampilan awal
                 document.getElementById('wallet-data').style.display = 'none';
                 document.getElementById('default-view').style.display = 'block';
                 
-                // Reset Tombol
                 btn.innerText = "CONNECT WALLET";
                 btn.classList.remove('connected');
 
-                // Hentikan animasi terminal
                 if(scanIntervalId) clearInterval(scanIntervalId);
                 document.getElementById('terminal-log').innerHTML = '';
             }
 
             async function handleAccountsChanged(accounts) {
                 if (accounts.length === 0) {
-                    // Jika user memutuskan koneksi dari dalam MetaMask
                     logoutWallet();
                 } else if (accounts[0] !== currentAccount) {
-                    // Jika user login atau ganti akun dompet
                     currentAccount = accounts[0];
                     updateDashboardData(currentAccount);
                 }
@@ -293,32 +253,26 @@ def read_root():
                 const btn = document.getElementById('btn-action');
                 const provider = new ethers.providers.Web3Provider(window.ethereum);
                 
-                // Ambil Saldo & Network
                 const balance = await provider.getBalance(address);
                 const ethBalance = ethers.utils.formatEther(balance);
                 const network = await provider.getNetwork();
 
-                // Update teks di UI
                 document.getElementById('ui-address').innerText = address.substring(0, 6) + '...' + address.substring(38);
                 document.getElementById('ui-balance').innerText = parseFloat(ethBalance).toFixed(4) + ' ETH';
                 document.getElementById('ui-network').innerText = network.name.toUpperCase() + ' (' + network.chainId + ')';
 
-                // Tampilkan Dashboard, Sembunyikan pesan standby
                 document.getElementById('default-view').style.display = 'none';
                 document.getElementById('wallet-data').style.display = 'block';
                 
-                // Ubah tombol menjadi tombol LOGOUT merah
                 btn.innerText = "DISCONNECT [ " + address.substring(0,4) + ".. ]";
                 btn.classList.add('connected');
 
-                // Restart animasi terminal untuk dompet baru
                 startHeuristicScan(address);
             }
 
-            // --- SIMULASI TERMINAL ---
             function startHeuristicScan(address) {
                 const terminal = document.getElementById('terminal-log');
-                terminal.innerHTML = '<div class="term-line"><span class="term-action">Initializing blockchain packet sniffer for new wallet...</span></div>';
+                terminal.innerHTML = '<div class="term-line"><span class="term-action">Initializing blockchain packet sniffer...</span></div>';
                 if(scanIntervalId) clearInterval(scanIntervalId);
 
                 const dummyLogs = [
@@ -345,7 +299,6 @@ def read_root():
                 }, 1000);
             }
 
-            // --- PARTIKEL BACKGROUND ---
             particlesJS("particles-js", {
                 "particles": { "number": { "value": 50 }, "color": { "value": "#00f0ff" }, "shape": { "type": "circle" }, "opacity": { "value": 0.3 }, "size": { "value": 2, "random": true }, "line_linked": { "enable": true, "distance": 150, "color": "#00f0ff", "opacity": 0.2, "width": 1 }, "move": { "enable": true, "speed": 1 } },
                 "interactivity": { "events": { "onhover": { "enable": true, "mode": "grab" } }, "modes": { "grab": { "distance": 200, "line_linked": { "opacity": 0.5 } } } }
