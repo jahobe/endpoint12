@@ -315,7 +315,22 @@ def read_root():
 
 @app.get("/mcp/{agent_id}")
 def mcp_health_check(agent_id: str):
-    return JSONResponse(status_code=200, content={"status": "Healthy", "message": "DAPAnalyz Endpoint Active"})
+    # Diperbarui agar merespons format JSON-RPC 2.0 yang sah untuk scanner
+    return JSONResponse(
+        status_code=200, 
+        content={
+            "jsonrpc": "2.0", 
+            "id": 1, 
+            "result": {
+                "status": "Healthy", 
+                "node": agent_id,
+                "serverInfo": {
+                    "name": "DAPAnalyz Node",
+                    "version": "2.0.0"
+                }
+            }
+        }
+    )
 
 @app.post("/mcp/{agent_id}")
 async def mcp_receive_command(agent_id: str, request: Request):
@@ -324,6 +339,10 @@ async def mcp_receive_command(agent_id: str, request: Request):
         req_id = req_data.get("id", 1)
         method = req_data.get("method", "")
         
+        # Penanganan method ping agar lolos scanner
+        if method == "ping":
+            return JSONResponse(status_code=200, content={"jsonrpc": "2.0", "id": req_id, "result": {}})
+
         result_data = {}
 
         if method == "initialize":
